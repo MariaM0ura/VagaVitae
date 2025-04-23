@@ -1,0 +1,35 @@
+# Ignorar ambiente virtual
+vagavitae/
+lib/
+venv/
+env/
+
+# Ignorar arquivos de ambiente
+.env
+
+# Ignorar arquivos temporários do Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Ignorar arquivos de log
+*.log
+
+# Ignorar arquivos de cache de pacotes
+*.egg-info/
+dist/
+build/
+
+# Ignorar arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Ignorar dados (opcional, se forem sensíveis ou grandes)
+data/*
+!data/.gitkeep  # manter a pasta no repositório, se necessário
+
+# Ignorar arquivos do editor
+.vscode/
+.idea/
+*.swp
+**/.env
