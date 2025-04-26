@@ -1,11 +1,11 @@
 from langchain.prompts import PromptTemplate
-from langchain_openai import OpenAI
+from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers.string import StrOutputParser
 import os
-from dotenv import load_dotenv
 
 def prompt_text(text):
     try:
-        llm = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), temperature=0.3)
+        llm = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"), temperature=0.3)
     except Exception as e:
         return f"Erro ao configurar o LLM: {str(e)}"
     
@@ -25,7 +25,9 @@ def prompt_text(text):
     )
     
     try:
-        resultado = llm(prompt.format(texto=text))
+        chain = prompt | llm | StrOutputParser()
+        resultado = chain.invoke({"texto": text})
+
         return resultado
     except Exception as e:
         return f"Erro ao processar com LangChain: {str(e)}"

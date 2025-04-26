@@ -1,5 +1,4 @@
 import pandas as pd
-from langchain_community.document_loaders import PyPDFLoader
 from .prompt_templates import prompt_text
 
 def process_data(file=None):
@@ -8,7 +7,7 @@ def process_data(file=None):
     
     result = ""
     
-    print(" ############# Iniciando LLM. ############# ")
+    #print(" ############# Iniciando LLM. ############# ")
 
     text = prompt_text(file)
     if isinstance(text, str) and text.startswith("Erro"):
@@ -22,12 +21,14 @@ def process_data(file=None):
         
         try:
             extracted_info = prompt_text(text)
+            print(" ############# Extraindo informações com LangChain. ############# ")
             #result += "Informações extraídas com LangChain:\n"
             result += extracted_info
             
             #lines = extracted_info.split("\n")
             #df = pd.DataFrame(lines, columns=["Conteúdo"])
             #result += f"\n\nDados em formato DataFrame:\n{df.to_string()}\n"
+
             
         except Exception as e:
             result += f"Erro ao processar com LangChain: {str(e)}"

@@ -62,12 +62,12 @@ def extract_job_info(job_url):
         # Store raw data in result
         result["data"] = job_data
         result["status"] = "success_raw"
-        print("Raw Scraped Data:", job_data)  # Debug print
+        #print("Raw Scraped Data:", job_data)  # Debug print
 
         # Process with LangChain to structure the description
         try:
             llm = ChatOpenAI(
-                model_name="gpt-4-mini",
+                model_name="gpt-4o-mini",
                 api_key=os.getenv("OPENAI_API_KEY"),
                 temperature=0.3
             )
@@ -110,7 +110,7 @@ def extract_job_info(job_url):
             # Execute LLM
             response = llm.invoke(prompt.format(text=raw_text))
             structured_output = response.content  # ChatOpenAI returns a message object with content
-            print("Raw LLM Output:", structured_output)  # Debug print
+            #print("Raw LLM Output:", structured_output)  # Debug print
 
             # Clean and parse JSON
             json_match = re.search(r'\{.*\}', structured_output, re.DOTALL)
