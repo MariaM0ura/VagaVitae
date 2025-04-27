@@ -1,5 +1,7 @@
 import json
 import os
+from dotenv import load_dotenv
+
 
 from langchain.prompts import PromptTemplate
 # StrOutputParser
@@ -10,6 +12,8 @@ from pydantic import BaseModel, Field
 
 from process_job import job_info
 from process_profile import result_profile
+
+load_dotenv()
 
 class ResumeOutput(BaseModel):
     personalized_resume: dict = Field(description="Resumo personalizado contendo experiências e habilidades")
@@ -110,8 +114,8 @@ def create_personalized_resume(job, cv):
 # Exemplo de uso com o código fornecido
 if __name__ == "__main__":
     # Exemplo de dados da vaga
-    job_url = "https://www.linkedin.com/jobs/view/4197904315"
-    path = "data/itamar_profile.pdf"
+    job_url = "https://www.linkedin.com/jobs/view/4181438889"
+    path = "data/tales_resume_simplified.pdf"
 
     # Extrair informações da vaga
     try:
