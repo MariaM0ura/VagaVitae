@@ -5,6 +5,8 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from pathlib import Path
 
+
+#BUILDING NEW CV
 def generate_resume_pdf(result, output_path):
     """
     Generate a PDF resume from the JSON result
