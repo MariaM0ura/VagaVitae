@@ -1,20 +1,18 @@
-from playwright.sync_api import sync_playwright
+
 from bs4 import BeautifulSoup
+import requests
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
+from fake_useragent import UserAgent
 import os
 import re
 import json
 
+
 def extract_job_info(job_url):
     """
-    Extracts information from a LinkedIn job posting using the provided URL.
-    Args:
-        job_url (str): URL of the job posting (e.g., https://www.linkedin.com/jobs/view/4208425886)
-    Returns:
-        dict: Dictionary with raw and structured job information or error message.
+    Extracts information from a LinkedIn job posting using requests and BeautifulSoup.
     """
-    # Initialize the result
     result = {
         "status": "error",
         "message": "",
@@ -24,22 +22,28 @@ def extract_job_info(job_url):
     try:
         # Validate URL
         if not re.match(r"https://www\.linkedin\.com/jobs/view/\d+", job_url):
-            result["message"] = "Invalid URL. Must be in the format https://www.linkedin.com/jobs/view/<job_id>"
+            result["message"] = "Invalid URL format"
             return result
 
-        # Scrape with Playwright
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
-            page.goto(job_url, timeout=60000)
-            page.wait_for_timeout(5000)  # Wait for dynamic content to load
-            html_content = page.content()
-            browser.close()
+        # Configure headers with random user agent
+        ua = UserAgent()
+        headers = {
+            'User-Agent': ua.random,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+        }
 
+        # Make the request
+        response = requests.get(job_url, headers=headers, timeout=30)
+        response.raise_for_status()
+        
         # Parse with BeautifulSoup
-        soup = BeautifulSoup(html_content, "html.parser")
+        soup = BeautifulSoup(response.text, "html.parser")
 
-        # Extract raw information
+        # Extract job data
         job_data = {}
 
         # Job title
@@ -54,17 +58,15 @@ def extract_job_info(job_url):
         location_elem = soup.find("span", class_="topcard__flavor--bullet")
         job_data["location"] = location_elem.get_text(strip=True) if location_elem else "Not found"
 
-        # Full description (includes responsibilities, qualifications, etc.)
+        # Description
         description_elem = soup.find("div", class_="description__text")
-        description_text = description_elem.get_text(strip=True) if description_elem else "Not found"
-        job_data["description"] = description_text
+        job_data["description"] = description_elem.get_text(strip=True) if description_elem else "Not found"
 
-        # Store raw data in result
+        # Store raw data
         result["data"] = job_data
         result["status"] = "success_raw"
-        #print("Raw Scraped Data:", job_data)  # Debug print
 
-        # Process with LangChain to structure the description
+
         try:
             llm = ChatOpenAI(
                 model_name="gpt-4o-mini",
@@ -127,8 +129,12 @@ def extract_job_info(job_url):
             result["message"] = f"Error processing with LangChain: {str(e)}"
             result["data"] = job_data  # Fall back to raw data
 
+
+    except requests.RequestException as e:
+        result["message"] = f"Error fetching job information: {str(e)}"
     except Exception as e:
-        result["message"] = f"Error extracting job information: {str(e)}"
+        result["message"] = f"Error processing job information: {str(e)}"
+
 
     return result
 

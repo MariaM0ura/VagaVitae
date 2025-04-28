@@ -35,7 +35,6 @@ def process_data(file=None):
     else:
         result += "Nenhum texto encontrado no PDF."
 
-    print(" ############# Processamento concluído. ############# ")
     
     return result
 

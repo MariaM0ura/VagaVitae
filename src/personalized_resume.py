@@ -4,16 +4,24 @@ from dotenv import load_dotenv
 
 
 from langchain.prompts import PromptTemplate
-# StrOutputParser
+
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import JsonOutputParser
 from pydantic import BaseModel, Field
 
-from process_job import job_info
-from process_profile import result_profile
+from src.process_job import job_info
+from src.process_profile import result_profile
+from src.services.cv_pdf_processed import generate_resume_pdf
+
+
+from pathlib import Path
+import uuid
+
+
 
 load_dotenv()
+
 
 class ResumeOutput(BaseModel):
     personalized_resume: dict = Field(description="Resumo personalizado contendo experiências e habilidades")
@@ -60,6 +68,7 @@ def create_personalized_resume(job, cv):
         6. Liste todos os requisitos identificados na vaga.
         7. Liste os requisitos atendidos pelo currículo.
         8. Calcule a métrica de adequação como a porcentagem de requisitos atendidos (ex.: 3 de 4 = 75%).
+        9. Inclua as informações de contato do candidato (nome, email, LinkedIn) extraídas do currículo.
 
         **Entrada:**
         - Texto do currículo: {cv_text}
@@ -68,11 +77,15 @@ def create_personalized_resume(job, cv):
         **Saída (JSON):**
         ```json
         {{
-        "personalized_resume": {{
+        "personalized_resume": {{   
+            "contact": {{"name": "string", "email": "string", "linkedin": "string"}},
+            "academic_background": {{"degree": "string", "institution": "string", "year": "string"}},
+            "certifications": ["string"],
             "experiences": [
             {{"company": "string", "role": "string", "duration": "string", "description": "string"}}
             ],
-            "skills": ["string"]
+            "skills": ["string"],
+           
         }},
         "match_metric": 0.0,
         "requirements": ["string"],
@@ -94,8 +107,8 @@ def create_personalized_resume(job, cv):
         result["match_metric"] = str(result["match_metric"]) + "%"
         result["status"] = "success"
 
-        print(f"Currículo personalizado gerado com sucesso.")
-
+        # print(f"############# Currículo personalizado gerado com sucesso. #############")
+        print(result)
         return result
 
     except Exception as e:
@@ -108,17 +121,11 @@ def create_personalized_resume(job, cv):
         }
     
 
-
-
-
-# Exemplo de uso com o código fornecido
-if __name__ == "__main__":
-    # Exemplo de dados da vaga
-    job_url = "https://www.linkedin.com/jobs/view/4181438889"
-    path = "data/tales_resume_simplified.pdf"
+def process(cv_path, job_url):
 
     # Extrair informações da vaga
     try:
+        
         result_job = job_info(job_url)
         
         if result_job["status"] not in ["success_raw", "success_structured"]:
@@ -130,7 +137,7 @@ if __name__ == "__main__":
 
     # Extrair informações do Currículo
     try:
-        cv = result_profile(path)
+        cv = result_profile(f'data/{cv_path}.pdf')
     except Exception as e:
         print(f"Erro ao processar o currículo: {str(e)}")
         exit()
@@ -138,6 +145,21 @@ if __name__ == "__main__":
     # Criar currículo personalizado
     result = create_personalized_resume(result_job, cv)
 
-    # Exibir resultado
-    print("Currículo Personalizado:")
-    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if "error" not in result:
+        # Generate PDF
+        output_pdf = 'data/'f"resume_{str(uuid.uuid4())[:8]}.pdf"
+        generate_resume_pdf(result, str(output_pdf))
+        print(f"############# Currículo personalizado gerado com sucesso. #############\n")
+        
+        return {
+            "status": "success",
+            "pdf_path": str(output_pdf),
+            "result": result
+        }
+
+
+    if os.path.exists(cv_path):
+        file_path = f'/data/{str(uuid.uuid4())}.pdf'
+        os.remove(file_path)
+    
+    
