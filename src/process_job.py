@@ -1,5 +1,5 @@
 import json
-from .services.extract_job import extract_job_info
+from .services.Job.extract_job import extract_job_info
 
 """
 This script extracts job information from a LinkedIn job posting using the provided URL.

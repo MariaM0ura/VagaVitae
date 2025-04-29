@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 from src.process_job import job_info
 from src.process_profile import result_profile
-from src.services.cv_pdf_processed import generate_resume_pdf
+from src.services.Profile.cv_pdf_processed import generate_resume_pdf
 
 
 from pathlib import Path
@@ -57,18 +57,25 @@ def create_personalized_resume(job, cv):
     prompt_template = PromptTemplate(
         input_variables=["cv_text", "job_info"],
         template="""
-            Você é um especialista em recrutamento. Sua tarefa é criar um currículo personalizado com base nos requisitos de uma vaga de emprego.
+        Você é um especialista em recrutamento. Sua tarefa é criar um currículo personalizado com base nos requisitos de uma vaga de emprego.
 
         **Instruções:**
         1. Analise as informações da vaga fornecidas em `job_info` e identifique os requisitos (habilidades técnicas, experiências profissionais, certificações, etc.).
-        2. A partir do texto do currículo em `cv_text`, selecione SOMENTE as experiências profissionais e habilidades que correspondem diretamente aos requisitos da vaga. Ignore informações irrelevantes.
-        3. Estruture o currículo personalizado como uma lista JSON com dois campos: `experiences` (lista de experiências relevantes) e `skills` (lista de habilidades relevantes).
-        4. Cada experiência deve conter: `company` (empresa), `role` (cargo), `duration` (duração, ex.: "2020-2022") e `description` (descrição curta, máx. 50 palavras).
-        5. Cada habilidade deve ser uma string (ex.: "Python", "Gestão de Projetos").
+        2. A partir do texto do currículo em `cv_text`, selecione SOMENTE as experiências profissionais, habilidades e certificações que correspondem diretamente aos requisitos da vaga. Ignore informações irrelevantes. Se nenhuma experiência for relevante, selecione apenas uma experiência mais próxima, selecione pelo menos 5 habilidades e mais importantes se houver.
+        3. Crie um **Resumo Profissional** de até 3 linhas sobre o candidato, baseado no currículo e alinhado ao perfil da vaga.
+        4. Crie um **Objetivo Profissional**, uma pequena frase sobre o interesse do candidato em conquistar a vaga.
+        5. Estruture o currículo personalizado como um JSON, com os seguintes campos:
+            - `contact`: informações de contato (nome, email, LinkedIn).
+            - `academic_background`: formação acadêmica (curso, instituição, ano).
+            - `certifications`: lista de certificações relevantes.
+            - `experiences`: lista de experiências relevantes (empresa, cargo, duração, descrição curta de até 50 palavras).
+            - `skills`: lista de habilidades técnicas relevantes.
+            - `professional_summary`: texto breve de resumo sobre o candidato.
+            - `career_objective`: frase sobre o objetivo do candidato relacionado à vaga.
         6. Liste todos os requisitos identificados na vaga.
-        7. Liste os requisitos atendidos pelo currículo.
-        8. Calcule a métrica de adequação como a porcentagem de requisitos atendidos (ex.: 3 de 4 = 75%).
-        9. Inclua as informações de contato do candidato (nome, email, LinkedIn) extraídas do currículo.
+        7. Liste todos os requisitos identificados na vaga.
+        8. Liste os requisitos atendidos pelo currículo.
+        9. Calcule a métrica de adequação como a porcentagem de requisitos atendidos (ex.: 3 de 4 = 75%).
 
         **Entrada:**
         - Texto do currículo: {cv_text}
@@ -77,19 +84,33 @@ def create_personalized_resume(job, cv):
         **Saída (JSON):**
         ```json
         {{
-        "personalized_resume": {{   
-            "contact": {{"name": "string", "email": "string", "linkedin": "string"}},
-            "academic_background": {{"degree": "string", "institution": "string", "year": "string"}},
-            "certifications": ["string"],
-            "experiences": [
-            {{"company": "string", "role": "string", "duration": "string", "description": "string"}}
-            ],
-            "skills": ["string"],
-           
-        }},
-        "match_metric": 0.0,
-        "requirements": ["string"],
-        "matched_requirements": ["string"]
+            "personalized_resume": {{
+                "contact": {{
+                    "name": "string",
+                    "email": "string",
+                    "linkedin": "string"
+                }},
+                "academic_background": {{
+                    "degree": "string",
+                    "institution": "string",
+                    "year": "string"
+                }},
+                "certifications": ["string"],
+                "experiences": [
+                    {{
+                        "company": "string",
+                        "role": "string",
+                        "duration": "string",
+                        "description": "string"
+                    }}
+                ],
+                "skills": ["string"],
+                "professional_summary": "string",
+                "career_objective": "string"
+            }},
+            "match_metric": 0.0,
+            "requirements": ["string"],
+            "matched_requirements": ["string"]
         }}
         ```
         """,

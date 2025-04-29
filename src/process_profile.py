@@ -1,6 +1,6 @@
 
-from .services.extract_pdf import extract_text_from_pdf
-from .services.process_data import process_data
+from .services.Profile.extract_pdf import extract_text_from_pdf
+from .services.Profile.process_data import process_data
 
 """
 This script extracts text from a CV file and processes it to create a structured CV.
